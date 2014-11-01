@@ -9,20 +9,29 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % The output file - open for overwriting with this new simulation
-fName = 'sim_long_20131012.txt';
-fid = fopen(fName, 'w');
-if (fid == -1)
+fName = 'sim_long_20141101.txt';
+fidavg = fopen(fName, 'w');
+if (fidavg == -1)
 	disp('Error: could not open the file for output.');
 	exit;
 else
 	disp('Success: output file opened successfully - proceeding to gather data.');
 end
 
+fName = 'sim_long_all_20141101.txt';
+fidall = fopen(fName, 'w');
+if (fidall == -1)
+    disp('Error: could not open the file for output.');
+    exit;
+else
+    disp('Success: output file opened successfully - proceeding to gather data.');
+end
+
 % Simulation parameters
 numSamples = 1000; 
 maxChildren = [3]; % this is k
 maxMessages = [3]; % this is m
-nodeCount = [25, 50, 75, 100, 200, 250, 500, 750, 1000];
+nodeCount = [25]; %, 50, 75, 100, 200, 250, 500, 750, 1000];
 p1Probs = [0.5];
 p2Probs= [0.5];
 
@@ -41,7 +50,8 @@ finalTable = zeros(numMessages, numChildren, numP1probs, numP2probs, numNodes, 4
 disp('Starting the simulation...');
 for messageIndex = 1:numMessages
     for childIndex = 1:numChildren
-        disp(sprintf('k,m =  %d, %d', maxChildren(childIndex), maxMessages(messageIndex)))
+        %disp(sprintf('k,m =  %d, %d', maxChildren(childIndex), maxMessages(messageIndex)))
+        fprintf(stderr, 'k,m =  %d, %d', maxChildren(childIndex), maxMessages(messageIndex))
         for p1Index = 1:numP1probs
             for p2Index = 1:numP2probs
 		p1Index
@@ -49,8 +59,8 @@ for messageIndex = 1:numMessages
 		p1Probs(p1Index)
 		p2Probs(p2Index)
                 for n = 1:numNodes
-                    disp(sprintf('Simulation for %d nodes with p1 = %f and p2 = %f', nodeCount(n), p1Probs(p1Index), p2Probs(p2Index)))
-				fprintf(stderr, 'Simulation for %d nodes with p1 = %f and p2 = %f', nodeCount(n), p1Probs(p1Index), p2Probs(p2Index))
+                    % disp(sprintf('Simulation for %d nodes with p1 = %f and p2 = %f', nodeCount(n), p1Probs(p1Index), p2Probs(p2Index)))
+                    fprintf(stderr, 'Simulation for %d nodes with p1 = %f and p2 = %f', nodeCount(n), p1Probs(p1Index), p2Probs(p2Index))
                     total = 0;
                     for i = 1:numSamples
                         % Initialize the adj. matrix representation for the nodes and network
@@ -217,13 +227,19 @@ for messageIndex = 1:numMessages
 
                         % Record the total time for simulation
                         times(messageIndex, childIndex, p1Index, p2Index, n, i) = time;
+
+                        fprintf('%f, %f, %f, %f, %f, %f, %f\n', maxMessages(messageIndex), maxChildren(childIndex), p1Probs(p1Index), p2Probs(p2Index), nodeCount(n), n, i, time);
+                        fprintf(stderr, '%f, %f, %f, %f, %f, %f, %f\n', maxMessages(messageIndex), maxChildren(childIndex), p1Probs(p1Index), p2Probs(p2Index), nodeCount(n), n, i, time);
+                        fprintf(fidall, '%f, %f, %f, %f, %f, %f, %f\n', maxMessages(messageIndex), maxChildren(childIndex), p1Probs(p1Index), p2Probs(p2Index), nodeCount(n), n, i, time);
                     end
                     avg = mean(times(messageIndex, childIndex, p1Index, p2Index, n,:));
                     stddev = std(times(messageIndex, childIndex, p1Index, p2Index, n,:));
                     err = 2 * (stddev / (numSamples^(1/2)));
+
+                    % Display average data
                     fprintf('%f, %f, %f, %f, %f, %f, %f, %f\n', maxChildren(childIndex), maxMessages(messageIndex), nodeCount(n), p1Probs(p1Index), p2Probs(p2Index), avg, stddev, err);
                     fprintf(stderr, '%f, %f, %f, %f, %f, %f, %f, %f\n', maxChildren(childIndex), maxMessages(messageIndex), nodeCount(n), p1Probs(p1Index), p2Probs(p2Index), avg, stddev, err);
-			fprintf(fid, '%f, %f, %f, %f, %f, %f, %f, %f\n', maxChildren(childIndex), maxMessages(messageIndex), nodeCount(n), p1Probs(p1Index), p2Probs(p2Index), avg, stddev, err);
+                    fprintf(fidavg, '%f, %f, %f, %f, %f, %f, %f, %f\n', maxChildren(childIndex), maxMessages(messageIndex), nodeCount(n), p1Probs(p1Index), p2Probs(p2Index), avg, stddev, err);
                 end
             end
         end
